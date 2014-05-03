@@ -88,15 +88,15 @@ int main()
 			{
 				for(j = 0;j < M;j++)//CheckMessageÖÐµÄE
 				{
-					for(int z = 0;z < B_SIZE;z++)
+					for(i = 0;i < B_SIZE;i++)
 					{
 						double t = 1.0;
-						for(i = 0;i < B_SIZE;i++)
+						for(int z = 0;z < B_SIZE;z++)
 						{
 							if(i == z)continue;
-							t *= tanh(Initi_M[j][B[j][i]]/2);
+							t *= tanh(Initi_M[j][B[j][z]]/2);
 						}
-						E[j][B[j][z]] = log((1 + t)/(1 - t));
+						E[j][B[j][i]] = log((1 + t)/(1 - t));
 					}
 				}
 				/*/printf E
@@ -119,7 +119,7 @@ int main()
 				}
 
 				//printf Z
-				printf("Z[i]\n");
+				printf("\nZ[i]\n");
 				for(i = 0;i < N;i++)
 				{
 					printf("%d ",Z[i]);
