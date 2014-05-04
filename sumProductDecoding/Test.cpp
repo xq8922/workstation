@@ -42,7 +42,7 @@ int main()
 	write_alist();
 	int i,j;
     while(snr <= MAX_SNR)
-    {
+    {        
 		int Err = 0;
         long sum_Single = 0;//每30次错误运行结束后的总运行次数
 		//根据snr 计算标准差  snr=10log10(1/2*r*stdev^2)
@@ -79,7 +79,7 @@ int main()
 						E[j][B[j][i]] = log((1 + t)/(1 - t));
 					}
 				}
-
+				
 				for(i = 0;i < N;i++)//求得Test中Z
 				{
 					double t = 0.0;
@@ -104,7 +104,7 @@ int main()
 					}
 				}
 				double codeErate = (double)tmp_Err/N;
-			//	printf("该码字第%d次迭代时，误码率为：%lf\n",I++,codeErate);
+				printf("该码字第%d次迭代时，误码率为：%lf\n",I++,codeErate);
 				if(tmp_Err == 0)
 				{
 					if(I == 0)++Err;
@@ -133,9 +133,9 @@ int main()
 						}
 					}
 				}
-
+				
 			}
-
+			
         }
 		double frameErr_rate = (double)Err/sum_Single;
         printf("When snr = %lf,frameErr_rate = %lf\n",snr,frameErr_rate);
