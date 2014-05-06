@@ -2,8 +2,10 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define direc "E:\\workstation\\workstation\\sumProductDecoding\\H.txt"
+#define direc2 "E:\\workstation\\workstation\\sumProductDecoding\\outPut.txt"
 #define NUM_1 12
 #define NUM_2 20
 #define NUM_3 200
@@ -14,7 +16,7 @@
 #define B_SIZE 5
 #define A_SIZE 3
 #define MIN_SNR 2.0
-#define MAX_SNR 5.0
+#define MAX_SNR 4.5
 
 const int m[CODE_LEN] = {0} ;
 double m_changed[CODE_LEN] ;
@@ -28,8 +30,6 @@ int B[CHECK_SIZE][B_SIZE],A[CODE_LEN][A_SIZE];
 int H[CODE_LEN][CHECK_SIZE]={0};
 double E[CHECK_SIZE][CODE_LEN] = {0};//矩阵，CheckMessage
 
-//matrix = (alist_matrix *)malloc(sizeof(alist_matrix));
-
 void write_alist();
 double Gauss();
 double e(int *B,double *);
@@ -41,21 +41,26 @@ int main()
     double snr = MIN_SNR,gauss,stdev;
 	write_alist();
 	int i,j;
+	FILE *fp = fopen(direc2,"w+");
+	srand((unsigned)time(NULL));
     while(snr <= MAX_SNR)
-    {        
+    {
 		int Err = 0;
         long sum_Single = 0;//每30次错误运行结束后的总运行次数
 		//根据snr 计算标准差  snr=10log10(1/2*r*stdev^2)
 		stdev=sqrt(1.0/((2.0*(N - M)/N)*pow(10,snr/10)));
 		printf("stdev is %lf\n",stdev);
-        while(Err < 30)
+		double codeErate;
+        while(Err < 50)
         {
+		//	srand((unsigned)time(NULL));
 			sum_Single ++;
 			for(i = 0;i < CODE_LEN;i++)//通过高斯信道得到码字m_changed,以及Initialization中的R
 			{
 				gauss = stdev * Gauss();
 				m_changed[i] = m[i] + gauss +1;
-				r[i] = 4 * m_changed[i] * snr;
+				r[i] = 2.0 * m_changed[i]/(stdev*stdev);
+		//		r[i] = 4 * m_changed[i] * snr;
 			}
 			for(i = 0;i < N;i++)//Initialization中的M
             {
@@ -64,8 +69,9 @@ int main()
             }
 			int flag = 0;//标志有错时一直执行到该次译码成功
 			int I = 0;//取迭代次数为50
-			while((!flag) && (I < 50))//当迭代次数大于50次时，算法译码失败
+			while((!flag) && (I < 100))//当迭代次数大于50次时，算法译码失败
 			{
+				I++;
 				for(j = 0;j < M;j++)//CheckMessage中的E
 				{
 					for(i = 0;i < B_SIZE;i++)
@@ -79,7 +85,7 @@ int main()
 						E[j][B[j][i]] = log((1 + t)/(1 - t));
 					}
 				}
-				
+
 				for(i = 0;i < N;i++)//求得Test中Z
 				{
 					double t = 0.0;
@@ -88,13 +94,6 @@ int main()
 					Z[i] = (t + r[i] <= 0)?1:0;
 				}
 
-				/*/printf Z
-				printf("\nZ[i]\n");
-				for(i = 0;i < N;i++)
-				{
-					printf("%d ",Z[i]);
-				}*/
-				//------------------------
 				int tmp_Err = 0;
 				for(i = 0;i < N;i++)
 				{
@@ -103,23 +102,13 @@ int main()
 						tmp_Err++;
 					}
 				}
-				double codeErate = (double)tmp_Err/N;
-				printf("该码字第%d次迭代时，误码率为：%lf\n",I++,codeErate);
+				codeErate = (double)tmp_Err/N;
 				if(tmp_Err == 0)
-				{
-					if(I == 0)++Err;
 					flag = 1;
-					break;
-				}
-				/*else
-					if(++Err > 50)
-					{
-						//sum_Single ++;
-						break;
-					}*/
+
 				if(!flag)
 				{
-					for(i = 0;i < N;i++)
+					for(i = 0;i < N;i++)//重新计算Initi_M
 					{
 						for(int z = 0;z < A_SIZE;z++)
 						{
@@ -133,16 +122,17 @@ int main()
 						}
 					}
 				}
-				
 			}
-			
+			if(I == 100)
+				Err++;
         }
-		double frameErr_rate = (double)Err/sum_Single;
-        printf("When snr = %lf,frameErr_rate = %lf\n",snr,frameErr_rate);
+		double frameErr_rate = 50.0/sum_Single;
+        printf("When snr = %lf,frameErr_rate = %.12lf\n",snr,frameErr_rate);
 		//输出到文件
-
+		fprintf(fp,"SNR: %lf,  FER: %.12lf\n",snr,frameErr_rate);
         snr += 0.1;
     }
+	fclose(fp);
     return 0;
 }
 
